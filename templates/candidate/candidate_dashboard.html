@@ -1,0 +1,332 @@
+{% extends "candidate/base_candidate.html" %}
+{% block title %}Dashboard - TALENT MATRIX AI{% endblock %}
+{% block page_title %}Candidate Dashboard{% endblock %}
+{% block page_subtitle %}Track your job applications and AI match scores.{% endblock %}
+{% block content %}
+<div class="space-y-6">
+    <!-- Header Summary & KPI Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Total Applications -->
+        <div
+            class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined text-2xl font-bold">work_history</span>
+            </div>
+            <div>
+                <p class="text-sm font-bold text-slate-500">Total Applications</p>
+                <div class="flex items-baseline gap-2">
+                    <h3 class="text-3xl font-black text-slate-900 dark:text-white leading-none">{{ kpis.total_apps }}
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Under Review -->
+        <div
+            class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex items-center gap-4">
+            <div
+                class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-blue-500">
+                <span class="material-symbols-outlined text-2xl font-bold">pending_actions</span>
+            </div>
+            <div>
+                <p class="text-sm font-bold text-slate-500">Under Review</p>
+                <div class="flex items-baseline gap-2">
+                    <h3 class="text-3xl font-black text-slate-900 dark:text-white leading-none">{{ kpis.under_review }}
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interviewing -->
+        <div
+            class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex items-center gap-4">
+            <div
+                class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center text-purple-500">
+                <span class="material-symbols-outlined text-2xl font-bold">handshake</span>
+            </div>
+            <div>
+                <p class="text-sm font-bold text-slate-500">Interviewing</p>
+                <div class="flex items-baseline gap-2">
+                    <h3 class="text-3xl font-black text-slate-900 dark:text-white leading-none">{{ kpis.interviewing }}
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rejected -->
+        <div
+            class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex items-center gap-4">
+            <div
+                class="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center text-red-500">
+                <span class="material-symbols-outlined text-2xl font-bold">cancel</span>
+            </div>
+            <div>
+                <p class="text-sm font-bold text-slate-500">Rejected</p>
+                <div class="flex items-baseline gap-2">
+                    <h3 class="text-3xl font-black text-slate-900 dark:text-white leading-none">{{ kpis.rejected }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hired -->
+        <div
+            class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex items-center gap-4">
+            <div
+                class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center text-green-500">
+                <span class="material-symbols-outlined text-2xl font-bold">verified</span>
+            </div>
+            <div>
+                <p class="text-sm font-bold text-slate-500">Hired</p>
+                <div class="flex items-baseline gap-2">
+                    <h3 class="text-3xl font-black text-slate-900 dark:text-white leading-none">{{ kpis.hired }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Avg Match Score -->
+        <div
+            class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex items-center gap-4">
+            <div
+                class="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center text-orange-500">
+                <span class="material-symbols-outlined text-2xl font-bold">analytics</span>
+            </div>
+            <div>
+                <p class="text-sm font-bold text-slate-500">Avg AI Match Score</p>
+                <div class="flex items-baseline gap-2">
+                    <h3 class="text-3xl font-black text-slate-900 dark:text-white leading-none">{{ kpis.avg_score }}%
+                    </h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Plotly Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Match Score Trend Chart -->
+        <div
+            class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 relative">
+            <div class="flex items-center justify-between mb-2">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white">AI Match Score Trend</h3>
+                    <p class="text-xs text-slate-500">Scores across recent applications</p>
+                </div>
+                <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined text-sm">trending_up</span>
+                </div>
+            </div>
+            <div id="chart-match-trend" class="w-full h-64 overflow-hidden">
+                <div class="flex items-center justify-center h-full">
+                    <span class="material-symbols-outlined animate-spin text-slate-300">progress_activity</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Application Status Distribution Chart -->
+        <div
+            class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 relative">
+            <div class="flex items-center justify-between mb-2">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white">Application Statuses</h3>
+                    <p class="text-xs text-slate-500">Breakdown of current pipeline</p>
+                </div>
+                <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined text-sm">pie_chart</span>
+                </div>
+            </div>
+            <div id="chart-status-dist" class="w-full h-64 overflow-hidden">
+                <div class="flex items-center justify-center h-full">
+                    <span class="material-symbols-outlined animate-spin text-slate-300">progress_activity</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Applications Table Section -->
+    <div
+        class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div
+            class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/20">
+            <div>
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Recent Applications</h3>
+                <p class="text-sm text-slate-500 mt-0.5">Your latest job submissions</p>
+            </div>
+            <a href="{{ url_for('candidate_applications') }}"
+                class="text-sm font-semibold text-primary hover:text-emerald-400 transition-colors inline-flex items-center gap-1">
+                View All
+                <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+            </a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+                        <th
+                            class="py-3 px-6 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest w-1/3">
+                            Job Context</th>
+                        <th
+                            class="py-3 px-6 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                            Match Score</th>
+                        <th
+                            class="py-3 px-6 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">
+                            Status</th>
+                        <th
+                            class="py-3 px-6 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-right">
+                            Applied Date</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800/80">
+                    {% for app in recent_applications %}
+                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
+                        <td class="py-4 px-6 align-middle">
+                            <p
+                                class="text-sm font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">
+                                {{ app.job.title }}</p>
+                            <p class="text-xs font-medium text-slate-500 mt-0.5">{{ app.job.location | default('Remote',
+                                true) }} • {{ app.job.department | default('Engineering', true) }}</p>
+                        </td>
+                        <td class="py-4 px-6 align-middle">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-black text-slate-900 dark:text-white">{{ app.match_score
+                                    }}%</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6 align-middle text-center">
+                            {% set current_status = app.status | default('under_review') %}
+                            {% if current_status == 'hired' %}
+                            <span
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Hired
+                            </span>
+                            {% elif rec in ['reject', 'rejected'] %}
+                            <span
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Rejected
+                            </span>
+                            {% elif rec in ['interview', 'interviewing', 'shortlisted'] %}
+                            <span
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                                <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span> Interviewing
+                            </span>
+                            {% else %}
+                            <span
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span> Under Review
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 align-middle text-right">
+                            <p class="text-sm font-semibold text-slate-600 dark:text-slate-300">{{
+                                app.applied_at.strftime('%b %d, %Y') }}</p>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="py-12 px-6 text-center">
+                            <div class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400">
+                                <span
+                                    class="material-symbols-outlined text-4xl mb-3 text-slate-300 dark:text-slate-600">inbox</span>
+                                <h4 class="text-base font-bold text-slate-900 dark:text-white mb-1">Start applying to
+                                    jobs</h4>
+                                <p class="text-sm max-w-sm">You haven't submitted any applications yet. Browse the job
+                                    board and submit your profile to see updates here.</p>
+                                <a href="{{ url_for('candidate_browse_jobs') }}"
+                                    class="mt-4 px-4 py-2 bg-primary text-slate-900 rounded-lg text-sm font-bold shadow-sm hover:bg-primary/90 transition-all">Browse
+                                    Jobs</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Determine Theme Colors
+        const isDark = document.documentElement.classList.contains('dark');
+        const chartFontColor = isDark ? '#94a3b8' : '#64748b';
+        const chartGridColor = isDark ? '#1e293b' : '#f1f5f9';
+        const paperColor = 'transparent';
+        const primaryColor = '#10b981';
+
+        // Fetch Dashboard Data
+        fetch('/candidate/dashboard-data')
+            .then(response => response.json())
+            .then(data => {
+                // Hide Loaders
+                document.getElementById('chart-match-trend').innerHTML = '';
+                document.getElementById('chart-status-dist').innerHTML = '';
+
+                // Render Trend Chart
+                if (data.match_trend.dates.length > 0) {
+                    const trendTrace = {
+                        x: data.match_trend.dates,
+                        y: data.match_trend.scores,
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        line: { color: primaryColor, width: 3, shape: 'spline' },
+                        marker: { size: 8, color: primaryColor },
+                        fill: 'tozeroy',
+                        fillcolor: 'rgba(16, 185, 129, 0.1)',
+                    };
+
+                    const trendLayout = {
+                        height: 250,
+                        autosize: true,
+                        paper_bgcolor: paperColor,
+                        plot_bgcolor: paperColor,
+                        margin: { t: 10, l: 30, r: 10, b: 30 },
+                        xaxis: { showgrid: false, tickfont: { color: chartFontColor, family: 'Inter' } },
+                        yaxis: { showgrid: true, gridcolor: chartGridColor, range: [0, 100], tickfont: { color: chartFontColor, family: 'Inter' } },
+                        hovermode: 'closest'
+
+                    };
+
+                    Plotly.newPlot('chart-match-trend', [trendTrace], trendLayout, { displayModeBar: false, responsive: true });
+                } else {
+                    document.getElementById('chart-match-trend').innerHTML = '<div class="flex items-center justify-center h-full text-sm font-medium text-slate-400">Not enough data to graph.</div>';
+                }
+
+                // Render Status Distribution Chart
+                if (data.status_counts.values.reduce((a, b) => a + b, 0) > 0) {
+                    const colors = ['#3b82f6', '#a855f7', '#ef4444', '#10b981']; // Pending, Interviewing, Rejected, Hired
+                    const distTrace = {
+                        labels: data.status_counts.labels,
+                        values: data.status_counts.values,
+                        type: 'pie',
+                        hole: 0.6,
+                        marker: { colors: colors },
+                        textinfo: 'label+percent',
+                        hoverinfo: 'label+value',
+                        textfont: { family: 'Inter', color: '#ffffff' }
+                    };
+
+                    const distLayout = {
+                        height: 250,
+                        autosize: true,
+                        paper_bgcolor: paperColor,
+                        plot_bgcolor: paperColor,
+                        margin: { t: 10, l: 10, r: 10, b: 10 },
+                        showlegend: false
+                    };
+
+                    Plotly.newPlot('chart-status-dist', [distTrace], distLayout, { displayModeBar: false, responsive: true });
+                } else {
+                    document.getElementById('chart-status-dist').innerHTML = '<div class="flex items-center justify-center h-full text-sm font-medium text-slate-400">Not enough data to graph.</div>';
+                }
+
+                // Force Plotly to recalculate layouts after container is populated
+                setTimeout(() => {
+                    window.dispatchEvent(new Event('resize'));
+                }, 100);
+            })
+            .catch(error => {
+                console.error('Error fetching dashboard data:', error);
+                document.getElementById('chart-match-trend').innerHTML = '<p class="text-sm font-medium text-red-500">Failed to load chart data.</p>';
+                document.getElementById('chart-status-dist').innerHTML = '<p class="text-sm font-medium text-red-500">Failed to load chart data.</p>';
+            });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Manage Admins - TALENT MATRIX AI{% endblock %}
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Manage Administrators</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400">View and manage system administrators.</p>
+        </div>
+        <a href="{{ url_for('admin_add_admin') }}"
+            class="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-semibold shadow-sm transition-colors text-sm flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm">person_add</span>
+            Add Admin
+        </a>
+    </div>
+
+    <div
+        class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead
+                    class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
+                    <tr>
+                        <th class="px-6 py-4">Admin ID</th>
+                        <th class="px-6 py-4">Admin Name</th>
+                        <th class="px-6 py-4">Email Address</th>
+                        <th class="px-6 py-4">Role Status</th>
+                        <th class="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    {% for admin in admins %}
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                        <td class="px-6 py-4 text-slate-500 font-medium">#{{ admin.id }}</td>
+                        <td class="px-6 py-4 font-bold text-slate-900 dark:text-white">
+                            <div class="flex items-center gap-2">
+                                <div
+                                    class="w-8 h-8 flex-shrink-0 rounded-full bg-gradient-to-br from-indigo-100 to-indigo-200 dark:from-indigo-900/40 dark:to-indigo-800/40 flex items-center justify-center font-bold text-indigo-700 dark:text-indigo-400 text-xs border border-indigo-200 dark:border-indigo-800/50">
+                                    {{ admin.name[0]|upper }}
+                                </div>
+                                {{ admin.name }}
+                                {% if admin.email == 'admin@example.com' %}
+                                <span
+                                    class="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-500 rounded text-[10px] font-bold uppercase tracking-wider">Primary</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-slate-500">{{ admin.email }}</td>
+                        <td class="px-6 py-4">
+                            <span
+                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400">
+                                <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                                Super Admin
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                {% if current_user.email == 'admin@example.com' and admin.email != 'admin@example.com'
+                                %}
+                                <form method="POST" action="{{ url_for('admin_delete_admin', id=admin.id) }}"
+                                    class="inline"
+                                    onsubmit="return confirm('Are you sure you want to permanently delete this Administrator account?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit"
+                                        class="w-8 h-8 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition-colors inline-flex items-center justify-center border border-transparent hover:border-red-200 dark:hover:border-red-900/50"
+                                        title="Revoke Admin Access">
+                                        <span class="material-symbols-outlined text-sm">person_remove</span>
+                                    </button>
+                                </form>
+                                {% elif current_user.email != 'admin@example.com' %}
+                                <span class="text-xs text-slate-400 italic">No permission</span>
+                                {% else %}
+                                <span class="text-xs text-slate-400 italic">Protected</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center text-slate-500">
+                            <p>No other administrators found.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

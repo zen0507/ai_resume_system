@@ -1,0 +1,164 @@
+{% extends "candidate/base_candidate.html" %}
+{% block title %}Profile Settings - TALENT MATRIX AI{% endblock %}
+{% block page_title %}Candidate Profile{% endblock %}
+{% block page_subtitle %}Manage your personal information and adjust AI-extracted capabilities.{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+    <!-- Profile Form -->
+    <div class="lg:col-span-2 space-y-6">
+        <form action="{{ url_for('candidate_profile') }}" method="POST"
+            class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Personal Information</h3>
+                <p class="text-sm text-slate-500 mt-0.5">Basic details used in your job applications.</p>
+            </div>
+
+            <div class="p-6 md:p-8 space-y-6">
+                <!-- Name & Email -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="name" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Full
+                            Name</label>
+                        <input type="text" id="name" name="name" value="{{ current_user.name }}"
+                            class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-primary rounded-xl text-slate-900 dark:text-white"
+                            required>
+                    </div>
+                    <div>
+                        <label for="email" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Email
+                            Address</label>
+                        <input type="email" id="email" value="{{ current_user.email }}"
+                            class="w-full bg-slate-100 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-500 rounded-xl cursor-not-allowed"
+                            disabled>
+                        <p class="text-[11px] text-slate-500 mt-1">Contact support to change your primary email.</p>
+                    </div>
+                </div>
+
+                <!-- Contact & Social -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="phone" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Phone
+                            Number</label>
+                        <input type="tel" id="phone" name="phone" value="{{ current_user.phone | default('', true) }}"
+                            class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-primary rounded-xl text-slate-900 dark:text-white"
+                            placeholder="+1 (555) 000-0000">
+                    </div>
+                    <div>
+                        <label for="linkedin"
+                            class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">LinkedIn URL</label>
+                        <input type="url" id="linkedin" name="linkedin"
+                            value="{{ current_user.linkedin | default('', true) }}"
+                            class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-primary rounded-xl text-slate-900 dark:text-white"
+                            placeholder="https://linkedin.com/in/username">
+                    </div>
+                </div>
+
+                <hr class="border-slate-200 dark:border-slate-800 my-8">
+
+                <div class="mb-6">
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">smart_toy</span>
+                        AI Extracted Capabilities
+                    </h3>
+                    <p class="text-sm text-slate-500">These fields are automatically populated when you upload a Master
+                        Resume, but you can manually adjust them to improve match accuracy.</p>
+                </div>
+
+                <div>
+                    <label for="skills"
+                        class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Technical & Soft
+                        Skills</label>
+                    <p class="text-xs text-slate-500 mb-3">Comma-separated list (e.g. Python, Leadership, Data Analysis)
+                    </p>
+                    <textarea id="skills" name="skills" rows="3"
+                        class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-primary rounded-xl text-slate-900 dark:text-white font-mono text-sm shadow-sm">{{ current_user.skills | default('', true) }}</textarea>
+                </div>
+
+                <div>
+                    <label for="experience"
+                        class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Professional Experience
+                        Summary</label>
+                    <textarea id="experience" name="experience" rows="4"
+                        class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-primary rounded-xl text-slate-900 dark:text-white text-sm shadow-sm"
+                        placeholder="Summarize your past roles and achievements...">{{ current_user.experience | default('', true) }}</textarea>
+                </div>
+
+                <div>
+                    <label for="education"
+                        class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Education
+                        Background</label>
+                    <textarea id="education" name="education" rows="2"
+                        class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-primary rounded-xl text-slate-900 dark:text-white text-sm shadow-sm"
+                        placeholder="Universities, degrees, and certifications...">{{ current_user.education | default('', true) }}</textarea>
+                </div>
+            </div>
+
+            <div
+                class="p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 flex items-center justify-end">
+                <button type="submit"
+                    class="px-6 py-2.5 bg-primary text-slate-900 font-bold rounded-xl shadow-sm hover:bg-emerald-400 transition-all flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">save</span>
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Side Panel (Master Document Status) -->
+    <div class="space-y-6">
+        <div class="bg-primary/5 rounded-2xl border border-primary/20 p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div
+                    class="w-10 h-10 bg-primary/20 text-emerald-700 dark:text-primary rounded-xl flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined">description</span>
+                </div>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white">Master Document</h3>
+            </div>
+
+            {% if current_user.resume_data %}
+            <div
+                class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 mb-4 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-bold text-slate-900 dark:text-white truncate max-w-[140px]">{{
+                        current_user.resume_filename }}</p>
+                    <p class="text-xs text-green-600 dark:text-green-400 font-semibold mt-0.5 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[12px]">verified</span> Active
+                    </p>
+                </div>
+            </div>
+            {% else %}
+            <div
+                class="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/50 rounded-xl p-4 mb-4 shadow-sm">
+                <p class="text-sm font-bold text-amber-800 dark:text-amber-400 flex items-center gap-1.5 mb-1"><span
+                        class="material-symbols-outlined text-[16px]">warning</span> Missing Resume</p>
+                <p class="text-xs text-amber-700 dark:text-amber-500">1-Click Apply disabled.</p>
+            </div>
+            {% endif %}
+
+            <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">The AI utilizes your master document to calculate
+                match scores and automatically generate cover letters.</p>
+
+            <a href="{{ url_for('candidate_upload_resume') }}"
+                class="w-full block text-center px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-xl hover:bg-slate-800 dark:hover:bg-slate-200 transition-colors text-sm shadow-sm">
+                {% if current_user.resume_data %}Replace Document{% else %}Upload Document{% endif %}
+            </a>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
+            <h3 class="text-base font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined text-slate-400">shield_person</span>
+                Account Security
+            </h3>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Update your password to ensure your account
+                remains secure.</p>
+
+            <a href="{{ url_for('candidate_settings') }}"
+                class="w-full block text-center px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-sm border border-slate-200 dark:border-slate-700">
+                Security Settings
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

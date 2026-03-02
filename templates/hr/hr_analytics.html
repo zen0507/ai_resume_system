@@ -1,0 +1,218 @@
+{% extends 'hr/base_hr.html' %}
+{% block title %}Analytics{% endblock %}
+
+{% block content %}
+<div class="mb-8" data-aos="fade-down">
+    <h2 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Recruitment Analytics</h2>
+    <p class="text-slate-500 mt-2 text-sm max-w-2xl">Deep dive into your hiring performance. Track application volumes,
+        candidate quality, and selection trends across all your listings.</p>
+</div>
+
+<div id="analytics-content" class="space-y-8">
+    <!-- Row 1: High Level Bar and Pie -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div
+            class="card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">bar_chart</span>
+                    Applications per Job
+                </h3>
+            </div>
+            <div class="p-6">
+                <div id="chart-app-counts" class="w-full h-80"></div>
+            </div>
+        </div>
+
+        <div
+            class="card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-green-500">pie_chart</span>
+                    Selection Status Breakdown
+                </h3>
+            </div>
+            <div class="p-6">
+                <div id="chart-rec-breakdown" class="w-full h-80"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 2: Timeline and Category (New) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div
+            class="card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-blue-500">timeline</span>
+                    Application Timeline (Last 30 Days)
+                </h3>
+            </div>
+            <div class="p-6">
+                <div id="chart-timeline" class="w-full h-80"></div>
+            </div>
+        </div>
+
+        <div
+            class="card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-orange-500">category</span>
+                    Job Category Distribution
+                </h3>
+            </div>
+            <div class="p-6">
+                <div id="chart-categories" class="w-full h-80"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 3: Quality and Skills -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div
+            class="card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden lg:col-span-1">
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-blue-500">show_chart</span>
+                    Avg Match Score
+                </h3>
+            </div>
+            <div class="p-6">
+                <div id="chart-avg-scores" class="w-full h-80"></div>
+            </div>
+        </div>
+
+        <div
+            class="card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden lg:col-span-1">
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-purple-500">terminal</span>
+                    Top Skills Requested
+                </h3>
+            </div>
+            <div class="p-6">
+                <div id="chart-skills" class="w-full h-80"></div>
+            </div>
+        </div>
+
+        <div
+            class="card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden lg:col-span-1">
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-yellow-500">equalizer</span>
+                    Score Distribution
+                </h3>
+            </div>
+            <div class="p-6">
+                <div id="chart-score-bins" class="w-full h-80"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="empty-state" class="hidden py-24 text-center">
+    <div class="inline-flex items-center justify-center w-24 h-24 bg-slate-50 dark:bg-slate-800 rounded-full mb-6">
+        <span class="material-symbols-outlined text-5xl text-slate-300">query_stats</span>
+    </div>
+    <h3 class="text-2xl font-black text-slate-900 dark:text-white">Not enough data yet</h3>
+    <p class="text-slate-500 mt-2 max-w-sm mx-auto">Start posting jobs and receiving applications to see detailed
+        recruitment insights.</p>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const response = await fetch('/hr/analytics-data');
+            const data = await response.json();
+
+            if (!data.job_labels || data.job_labels.length === 0) {
+                document.getElementById('analytics-content').classList.add('hidden');
+                document.getElementById('empty-state').classList.remove('hidden');
+                return;
+            }
+
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const textColor = isDark ? '#94a3b8' : '#64748b';
+            const gridColor = isDark ? '#334155' : '#f1f5f9';
+            const paperBg = 'rgba(0,0,0,0)';
+            const primaryColor = '#8b5cf6'; // Violet/Purple
+
+            const layoutBase = {
+                font: { family: 'Inter, sans-serif', color: textColor },
+                paper_bgcolor: paperBg,
+                plot_bgcolor: paperBg,
+                margin: { t: 10, l: 40, r: 10, b: 40 },
+                xaxis: { gridcolor: gridColor, zeroline: false },
+                yaxis: { gridcolor: gridColor, zeroline: false }
+            };
+
+            // 1. Applications per Job
+            Plotly.newPlot('chart-app-counts', [{
+                x: data.job_labels,
+                y: data.app_counts,
+                type: 'bar',
+                marker: { color: primaryColor, opacity: 0.8 }
+            }], { ...layoutBase, xaxis: { ...layoutBase.xaxis, type: 'category', tickangle: -45 } }, { responsive: true, displayModeBar: false });
+
+            // 2. Recommendation Breakdown
+            Plotly.newPlot('chart-rec-breakdown', [{
+                labels: data.rec_labels,
+                values: data.rec_values,
+                type: 'pie',
+                hole: 0.6,
+                marker: { colors: ['#10b981', '#f43f5e', '#3b82f6', '#f59e0b', '#8b5cf6'] },
+                textinfo: 'percent'
+            }], { ...layoutBase, margin: { t: 0, l: 0, r: 0, b: 40 }, showlegend: true, legend: { orientation: 'h', y: -0.2 } }, { responsive: true, displayModeBar: false });
+
+            // 3. Application Timeline
+            Plotly.newPlot('chart-timeline', [{
+                x: data.timeline_labels,
+                y: data.timeline_values,
+                type: 'scatter',
+                mode: 'lines+markers',
+                fill: 'tozeroy',
+                line: { color: '#3b82f6', width: 3, shape: 'spline' },
+                marker: { size: 8, color: '#3b82f6' }
+            }], { ...layoutBase, xaxis: { ...layoutBase.xaxis, type: 'date' } }, { responsive: true, displayModeBar: false });
+
+            // 4. Category Distribution
+            Plotly.newPlot('chart-categories', [{
+                labels: data.category_labels,
+                values: data.category_values,
+                type: 'pie',
+                marker: { colors: ['#8b5cf6', '#3b82f6', '#ec4899', '#10b981', '#f59e0b'] }
+            }], { ...layoutBase, showlegend: true, legend: { orientation: 'h', y: -0.1 } }, { responsive: true, displayModeBar: false });
+
+            // 5. Avg Match Score
+            Plotly.newPlot('chart-avg-scores', [{
+                x: data.job_labels,
+                y: data.avg_scores,
+                type: 'scatter',
+                mode: 'lines+markers',
+                line: { color: '#3b82f6', width: 4, shape: 'spline' },
+                marker: { size: 10, color: '#3b82f6' }
+            }], { ...layoutBase, xaxis: { ...layoutBase.xaxis, type: 'category' }, yaxis: { ...layoutBase.yaxis, range: [0, 100] } }, { responsive: true, displayModeBar: false });
+
+            // 6. Top Skills
+            Plotly.newPlot('chart-skills', [{
+                x: data.skill_values,
+                y: data.skill_labels,
+                type: 'bar',
+                orientation: 'h',
+                marker: { color: '#8b5cf6', opacity: 0.8 }
+            }], { ...layoutBase, xaxis: { ...layoutBase.xaxis, type: 'linear' }, yaxis: { ...layoutBase.yaxis, type: 'category' }, margin: { ...layoutBase.margin, l: 100 } }, { responsive: true, displayModeBar: false });
+
+            // 7. Score Distribution
+            Plotly.newPlot('chart-score-bins', [{
+                x: data.score_labels,
+                y: data.score_bins,
+                type: 'bar',
+                marker: { color: '#f59e0b', opacity: 0.8 }
+            }], { ...layoutBase, xaxis: { ...layoutBase.xaxis, type: 'category' } }, { responsive: true, displayModeBar: false });
+
+        } catch (error) {
+            console.error('Error loading analytics:', error);
+        }
+    });
+</script>
+{% endblock %}

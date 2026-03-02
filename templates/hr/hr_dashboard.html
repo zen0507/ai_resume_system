@@ -1,0 +1,430 @@
+{% extends 'hr/base_hr.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="mb-8">
+    <h2 class="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Recruitment Overview</h2>
+    <p class="text-slate-500 mt-1">Welcome back, here's what's happening with your candidates today.</p>
+</div>
+
+<!-- 1. Summary Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="stats shadow bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
+        <div class="stat p-6">
+            <div class="stat-figure text-primary opacity-20">
+                <span class="material-symbols-outlined text-4xl">group</span>
+            </div>
+            <div class="stat-title text-xs font-bold uppercase tracking-wider text-slate-500">Total Applicants</div>
+            <div class="stat-value text-slate-900 dark:text-white text-3xl count-up">{{ kpis.total_candidates }}</div>
+            <div class="stat-desc text-slate-400 mt-1">Received across all jobs</div>
+        </div>
+    </div>
+
+    <div class="stats shadow bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
+        <div class="stat p-6">
+            <div class="stat-figure text-green-500 opacity-20">
+                <span class="material-symbols-outlined text-4xl">check_circle</span>
+            </div>
+            <div class="stat-title text-xs font-bold uppercase tracking-wider text-slate-500">Selected</div>
+            <div class="stat-value text-green-600 dark:text-green-400 text-3xl count-up">{{ kpis.selected }}</div>
+            <div class="stat-desc text-green-500/80 mt-1 font-medium">Ready for interview</div>
+        </div>
+    </div>
+
+    <div class="stats shadow bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
+        <div class="stat p-6">
+            <div class="stat-figure text-red-500 opacity-20">
+                <span class="material-symbols-outlined text-4xl">cancel</span>
+            </div>
+            <div class="stat-title text-xs font-bold uppercase tracking-wider text-slate-500">Rejected</div>
+            <div class="stat-value text-red-600 dark:text-red-400 text-3xl count-up">{{ kpis.rejected }}</div>
+            <div class="stat-desc text-red-500/80 mt-1 font-medium">Screened out by AI</div>
+        </div>
+    </div>
+
+    <div class="stats shadow bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
+        <div class="stat p-6">
+            <div class="stat-figure text-blue-500 opacity-20">
+                <span class="material-symbols-outlined text-4xl">analytics</span>
+            </div>
+            <div class="stat-title text-xs font-bold uppercase tracking-wider text-slate-500">Avg Match Score</div>
+            <div class="stat-value text-blue-600 dark:text-blue-400 text-3xl"><span class="count-up">{{
+                    kpis.avg_match_score }}</span>%</div>
+            <div class="stat-desc text-blue-500/80 mt-1 font-medium">Global candidate quality</div>
+        </div>
+    </div>
+</div>
+
+<!-- 2. Analytics Row 1 -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+    <div class="card bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 lg:col-span-2">
+        <div class="card-body p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="card-title text-lg font-bold text-slate-900 dark:text-white">Application Trends</h3>
+                <div class="flex gap-2 text-xs font-semibold text-slate-400">
+                    Active Jobs: {{ kpis.total_jobs }}
+                </div>
+            </div>
+            <div id="chart-top-candidates" class="w-full h-80"></div>
+        </div>
+    </div>
+
+    <div class="card bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800">
+        <div class="card-body p-6">
+            <h3 class="card-title text-lg font-bold text-slate-900 dark:text-white mb-6">Candidate Quality</h3>
+            <div id="chart-selection-ratio" class="w-full h-80"></div>
+        </div>
+    </div>
+</div>
+
+<!-- 3. Analytics Row 2 (Area Chart) -->
+<div class="card bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 mb-8">
+    <div class="card-body p-6">
+        <h3 class="card-title text-lg font-bold text-slate-900 dark:text-white mb-6">Score Distribution</h3>
+        <div id="chart-score-distribution" class="w-full h-80"></div>
+    </div>
+</div>
+
+<!-- 4. Recent Candidates Table -->
+<div class="card bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 mb-8">
+    <div class="card-body p-0">
+        <div class="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-800">
+            <h3 class="card-title text-lg font-bold text-slate-900 dark:text-white m-0">Recent Candidate Decisions</h3>
+            <a href="{{ url_for('hr_my_jobs') }}"
+                class="btn btn-outline btn-primary btn-sm rounded-lg normal-case border-2 font-bold px-6">
+                View All Applications
+            </a>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead
+                    class="bg-slate-50/50 dark:bg-slate-800/50 text-slate-400 uppercase text-[10px] font-black tracking-widest border-b border-slate-100 dark:border-slate-800">
+                    <tr>
+                        <th class="px-6 py-5">Candidate Name</th>
+                        <th class="px-6 py-5">Applied Job Role</th>
+                        <th class="px-6 py-5">AI Match Score</th>
+                        <th class="px-6 py-5">Recommendation</th>
+                        <th class="px-6 py-5 text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    {% if recent_candidates %}
+                    {% for app in recent_candidates %}
+                    {% if app.candidate and app.job %}
+                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400">
+                                    {{ app.candidate.name[:2]|upper }}
+                                </div>
+                                <div>
+                                    <div class="font-bold text-slate-900 dark:text-white">{{ app.candidate.name }}</div>
+                                    <div class="text-xs text-slate-400">{{ app.candidate.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="text-sm font-semibold text-slate-600 dark:text-slate-400">{{ app.job.title
+                                }}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-col gap-1 w-24">
+                                <span
+                                    class="text-sm font-black {% if app.match_score >= 80 %}text-green-500{% elif app.match_score >= 50 %}text-blue-500{% else %}text-red-500{% endif %}">
+                                    {{ app.match_score }}%
+                                </span>
+                                <div class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                    <div class="h-full progress-bar-fill {% if app.match_score >= 80 %}bg-green-500{% elif app.match_score >= 50 %}bg-blue-500{% else %}bg-red-500{% endif %}"
+                                        data-width="{{ app.match_score or 0 }}"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if app.status == 'hired' %}
+                            <span
+                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-black bg-emerald-500 text-white shadow-sm">
+                                <span class="material-symbols-outlined text-xs">verified</span> HIRED
+                            </span>
+                            {% elif app.status == 'shortlisted' %}
+                            <span
+                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400">
+                                <span class="material-symbols-outlined text-xs">check</span> SHORTLISTED
+                            </span>
+                            {% elif app.status == 'rejected' %}
+                            <span
+                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400">
+                                <span class="material-symbols-outlined text-xs">close</span> REJECTED
+                            </span>
+                            {% else %}
+                            <span
+                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 uppercase">
+                                <span class="material-symbols-outlined text-xs">pending</span> PENDING
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <button data-candidate="{{ app.candidate.name }}" 
+                                    data-filename="{{ app.candidate.resume_filename }}" 
+                                    data-score="{{ app.match_score }}"
+                                    data-analysis="{{ app.risk_analysis|e }}"
+                                    data-id="{{ app.id }}"
+                                    onclick="openResumeModalFromBtn(this)"
+                                class="inline-flex items-center gap-1.5 text-primary text-sm font-bold hover:underline">
+                                <span class="material-symbols-outlined text-sm">description</span> View Resume
+                            </button>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center text-slate-500 italic">No recent candidates to
+                            show.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="dashboard-data" data-charts='{{ chart_data | tojson | safe }}' style="display:none;"></div>
+
+<!-- Flowbite Modal: View Resume -->
+<div id="resume-modal" tabindex="-1" aria-hidden="true"
+    class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-[60] justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+    <div class="relative p-4 w-full max-w-4xl max-h-full">
+        <!-- Modal content -->
+        <div
+            class="relative bg-white dark:bg-slate-900 rounded-2xl shadow border border-slate-200 dark:border-slate-800">
+            <!-- Modal header -->
+            <div
+                class="flex items-center justify-between p-4 md:p-5 border-b border-slate-100 dark:border-slate-800 rounded-t">
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">description</span>
+                    Resume Analysis Details
+                </h3>
+                <button onclick="closeResumeModal()" type="button"
+                    class="text-slate-400 bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white rounded-lg text-sm w-10 h-10 ms-auto inline-flex justify-center items-center transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <!-- Modal body -->
+            <div class="p-6 space-y-6">
+                <div
+                    class="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-8 flex flex-col items-center justify-center text-center border border-dashed border-slate-200 dark:border-slate-700">
+                    <span
+                        class="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600 mb-4">picture_as_pdf</span>
+                    <p class="text-slate-900 dark:text-white font-bold" id="modal-filename">Candidate_Resume_Analysis.pdf</p>
+                    <p class="text-sm text-slate-500 mt-1 max-w-sm">Detailed analysis for <span id="modal-candidate-name" class="font-bold">Candidate</span> based on job requirements.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+                        <h4 class="font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary text-sm">stars</span>
+                            AI Match Highlights
+                        </h4>
+                        <ul class="text-sm text-slate-600 dark:text-slate-400 space-y-2" id="modal-highlights">
+                            <li class="flex items-start gap-2"><span class="text-primary">•</span> Processing match details...</li>
+                        </ul>
+                    </div>
+                    <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+                        <h4 class="font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-purple-500 text-sm">psychology</span>
+                            Gemini Feedback
+                        </h4>
+                        <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed italic" id="modal-feedback">
+                            "AI analysis is pending or unavailable."
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <!-- Modal footer -->
+            <div class="flex items-center justify-center p-6 border-t border-slate-100 dark:border-slate-800 rounded-b">
+                <button onclick="closeResumeModal()" type="button"
+                    class="btn border-none bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-10 rounded-lg font-bold">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Inline Scripts for Plotly & Animations -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Data Retrieval ---
+        const dataEl = document.getElementById('dashboard-data');
+        let chartData = { selection_ratio: [0, 0, 0], top_candidates: [], score_bins: [0, 0, 0, 0, 0] };
+
+        if (dataEl) {
+            try {
+                chartData = JSON.parse(dataEl.getAttribute('data-charts') || '{}');
+            } catch (e) {
+                console.error("Error parsing chart data:", e);
+            }
+        }
+
+        // --- Flowbite Manual Init Check ---
+        if (typeof initModals === 'function') {
+            initModals();
+        }
+
+        // --- Plotly Configurations ---
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const textColor = isDark ? '#a6adbb' : '#1f2937';
+        const gridColor = isDark ? '#1f2937' : '#3b82f620';
+        const paperBg = 'rgba(0,0,0,0)';
+        const primaryStr = '#8b5cf6';
+
+        const layoutConfig = {
+            font: { family: 'Inter, sans-serif', color: textColor },
+            paper_bgcolor: paperBg,
+            plot_bgcolor: paperBg,
+            margin: { t: 20, l: 40, r: 20, b: 40 }
+        };
+
+        // Chart 1: Top 5 Candidates Bar Chart
+        if (document.getElementById('chart-top-candidates')) {
+            const barData = [{
+                type: 'bar',
+                x: chartData.top_candidates && chartData.top_candidates.length > 0 ? chartData.top_candidates.map(c => c.name) : ['No Data'],
+                y: chartData.top_candidates && chartData.top_candidates.length > 0 ? chartData.top_candidates.map(c => c.score) : [0],
+                marker: { color: primaryStr, opacity: 0.8 }
+            }];
+            const barLayout = {
+                ...layoutConfig,
+                xaxis: { gridcolor: gridColor },
+                yaxis: { gridcolor: gridColor, range: [0, 100] }
+            };
+            Plotly.newPlot('chart-top-candidates', barData, barLayout, { responsive: true, displayModeBar: false });
+        }
+
+        // Chart 2: Selection Ratio Pie Chart
+        if (document.getElementById('chart-selection-ratio')) {
+            const pieData = [{
+                type: 'pie',
+                labels: ['Selected', 'Rejected', 'Pending Review'],
+                values: chartData.selection_ratio || [0, 0, 0],
+                hole: 0.6,
+                marker: { colors: ['#10b981', '#f43f5e', '#3b82f6'] },
+                textinfo: 'percent'
+            }];
+            const pieLayout = { ...layoutConfig, margin: { t: 0, l: 0, r: 0, b: 0 }, showlegend: true, legend: { orientation: 'h', y: -0.1 } };
+            Plotly.newPlot('chart-selection-ratio', pieData, pieLayout, { responsive: true, displayModeBar: false });
+        }
+
+        // Chart 3: Score Distribution Area Chart
+        if (document.getElementById('chart-score-distribution')) {
+            const distData = [{
+                type: 'scatter',
+                fill: 'tozeroy',
+                mode: 'lines',
+                x: ['0-20', '21-40', '41-60', '61-80', '81-100'],
+                y: chartData.score_bins || [0, 0, 0, 0, 0],
+                line: { color: primaryStr, width: 3 }
+            }];
+            const distLayout = {
+                ...layoutConfig,
+                xaxis: { gridcolor: gridColor },
+                yaxis: { gridcolor: gridColor }
+            };
+            Plotly.newPlot('chart-score-distribution', distData, distLayout, { responsive: true, displayModeBar: false });
+        }
+
+        // --- Animated Counters & Progress Bars ---
+        document.querySelectorAll('.progress-bar-fill').forEach(el => {
+            const width = el.getAttribute('data-width') || 0;
+            el.style.width = width + '%';
+        });
+
+        const animateValue = (obj, start, end, duration) => {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start).toLocaleString();
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        };
+
+        setTimeout(() => {
+            document.querySelectorAll('.count-up').forEach(el => {
+                const finalVal = parseInt(el.innerText.replace(/,/g, ''));
+                if (!isNaN(finalVal)) {
+                    el.innerText = '0';
+                    animateValue(el, 0, finalVal, 1500);
+                }
+            });
+        }, 500);
+    });
+
+    let currentAppId = null;
+
+    function openResumeModalFromBtn(btn) {
+        const name = btn.getAttribute('data-candidate');
+        const filename = btn.getAttribute('data-filename');
+        const score = btn.getAttribute('data-score');
+        const analysis = btn.getAttribute('data-analysis');
+        const id = btn.getAttribute('data-id');
+        currentAppId = id;
+        openResumeModal(name, filename, score, analysis);
+    }
+
+    function openResumeModal(name, filename, score, analysis) {
+        // Populate Modal Fields
+        document.getElementById('modal-candidate-name').innerText = name;
+        document.getElementById('modal-filename').innerText = filename || 'resume.pdf';
+        document.getElementById('modal-feedback').innerText = `"${analysis || 'No detailed feedback available.'}"`;
+        
+        // Generate pseudo-highlights based on score
+        const highlightsUl = document.getElementById('modal-highlights');
+        highlightsUl.innerHTML = '';
+        
+        const scoreInt = parseInt(score);
+        let items = [];
+        if (scoreInt > 80) {
+            items = ["Exceptional skill alignment", "High technical relevancy", "Strong candidate for this role"];
+        } else if (scoreInt > 50) {
+            items = ["Moderate experience match", "Competent skill set", "Good potential for growth"];
+        } else {
+            items = ["Limited skill overlap", "Requires further review", "Significant gaps detected"];
+        }
+        
+        items.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'flex items-start gap-2';
+            li.innerHTML = `<span class="text-primary">•</span> ${item}`;
+            highlightsUl.appendChild(li);
+        });
+
+        // Show Modal using Flowbite API if available, or manual toggle
+        const modal = document.getElementById('resume-modal');
+        if (modal) {
+            if (typeof Modal !== 'undefined') {
+                const modalObj = new Modal(modal);
+                modalObj.show();
+            } else {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+    }
+
+    function closeResumeModal() {
+        const modal = document.getElementById('resume-modal');
+        if (modal) {
+            if (typeof Modal !== 'undefined') {
+                const modalObj = new Modal(modal);
+                modalObj.hide();
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+    }
+
+</script>
+{% endblock %}

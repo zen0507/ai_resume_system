@@ -1,0 +1,272 @@
+{% extends 'hr/base_hr.html' %}
+{% block title %}View Application{% endblock %}
+{% block page_title %}Application Details{% endblock %}
+{% block page_subtitle %}In-depth AI analysis and candidate profile review.{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header with Status -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div class="flex items-center gap-6">
+            <div class="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black text-2xl">
+                {{ application.candidate.name[:2]|upper }}
+            </div>
+            <div>
+                <h2 class="text-2xl font-black text-slate-900 dark:text-white">{{ application.candidate.name }}</h2>
+                <div class="flex items-center gap-3 mt-1 text-slate-500">
+                    <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-sm">mail</span> {{ application.candidate.email }}</span>
+                    <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                    <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-sm">work</span> Applied for {{ application.job.title }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex flex-wrap gap-3">
+            <form action="{{ url_for('hr_view_application', id=application.id) }}" method="POST" class="flex flex-wrap gap-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                {% if application.status == 'shortlisted' %}
+                    <button disabled class="btn bg-purple-100 text-purple-700 border-purple-200 px-6 rounded-xl font-bold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">schedule</span> Interviewed
+                    </button>
+                    <button name="recommendation" value="hired" class="btn btn-primary px-6 rounded-xl font-bold">Mark as Selected</button>
+                    <button name="recommendation" value="rejected" class="btn btn-outline btn-error px-6 rounded-xl font-bold">Reject</button>
+                {% elif application.status == 'hired' %}
+                    <button disabled class="btn bg-emerald-100 text-emerald-700 border-emerald-200 px-8 rounded-xl font-bold flex items-center gap-2 text-sm">
+                        <span class="material-symbols-outlined text-sm font-bold">verified</span> Selected
+                    </button>
+                    <button name="recommendation" value="shortlisted" class="btn btn-ghost text-slate-500 px-4 py-2 hover:bg-slate-100 rounded-lg text-xs font-bold transition-all">Move back to Interview</button>
+                {% elif application.status == 'rejected' %}
+                    <button name="recommendation" value="shortlisted" class="btn btn-primary px-6 rounded-xl font-bold">Mark as Interviewed</button>
+                    <button disabled class="btn bg-rose-100 text-rose-700 border-rose-200 px-6 rounded-xl font-bold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">block</span> Rejected
+                    </button>
+                {% else %}
+                    <button name="recommendation" value="shortlisted" class="btn btn-primary px-6 rounded-xl font-bold">Mark as Interviewed</button>
+                    <button name="recommendation" value="hired" class="btn btn-outline btn-success px-6 rounded-xl font-bold">Select Candidate</button>
+                    <button name="recommendation" value="rejected" class="btn btn-outline btn-error px-6 rounded-xl font-bold">Reject</button>
+                {% endif %}
+            </form>
+            <a href="{{ url_for('view_resume', app_id=application.id) }}" target="_blank" class="btn btn-ghost border border-slate-200 dark:border-slate-700 px-6 rounded-xl font-bold flex items-center gap-2">
+                <span class="material-symbols-outlined">download</span> View Original PDF
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- AI Analysis Column -->
+        <div class="lg:col-span-2 space-y-8">
+            <!-- AI Insights Card -->
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <div class="bg-slate-50/50 dark:bg-slate-800/30 p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">psychology</span>
+                        Mastery AI Insights
+                    </h3>
+                    <div class="flex items-center gap-4">
+                        <button onclick="rescanAI('{{ application.id }}')" id="rescan-btn"
+                            class="inline-flex items-center gap-1 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg transition-all text-xs font-bold">
+                            <span class="material-symbols-outlined text-[16px]">psychology</span>
+                            Rescan
+                        </button>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Confidence Score:</span>
+                            <span class="text-lg font-black text-primary" id="match-score-display">{{ application.match_score }}%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-8 space-y-6">
+                    <div class="prose dark:prose-invert max-w-none text-slate-600 dark:text-slate-400 leading-relaxed whitespace-pre-wrap" id="ai-analysis-text">
+                        {{ application.risk_analysis or application.ai_raw_response or "Analysis data currently unavailable for this record." }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Snapshots for Historical Consistency -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <h4 class="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
+                        <span class="material-symbols-outlined text-blue-500 text-lg">history_edu</span>
+                        Resume Snapshot
+                    </h4>
+                    <div class="max-h-60 overflow-y-auto text-xs text-slate-500 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                        {{ application.resume_snapshot or "No text snapshot preserved." }}
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <h4 class="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
+                        <span class="material-symbols-outlined text-orange-500 text-lg">description</span>
+                        Job JD Snapshot
+                    </h4>
+                    <div class="max-h-60 overflow-y-auto text-xs text-slate-500 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                        {{ application.job_snapshot or "No job snapshot preserved." }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Details -->
+        <div class="space-y-8">
+            <!-- Risk/Success Analysis -->
+            <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl relative overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl -mr-16 -mt-16"></div>
+                <h3 class="text-lg font-bold mb-6 flex items-center gap-2 text-slate-900 dark:text-white">
+                    <span class="material-symbols-outlined text-primary">analytics</span>
+                    Strategic Match
+                </h3>
+                
+                <div class="space-y-6">
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-[10px]">Match Percent</span>
+                            <span class="font-black text-primary" id="match-score-sidebar">{{ application.match_score }}%</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
+                            <div class="h-full bg-primary dynamic-width" data-width="{{ application.match_score or 0 }}"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-[10px]">Risk Factor</span>
+                            <span class="font-black text-red-500 dark:text-red-400" id="risk-score-sidebar">{{ application.risk_percentage }}%</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
+                            <div class="h-full bg-red-500 dark:bg-red-400 dynamic-width" data-width="{{ application.risk_percentage or 0 }}"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-slate-100 dark:border-white/10">
+                    <h4 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3">AI Recommendation</h4>
+                    <p class="text-sm font-medium leading-relaxed italic text-slate-600 dark:text-slate-300" id="ai-recommendation-side">
+                        {{ (application.risk_analysis[:200] if application.risk_analysis else "No automated summary available.") + "..." }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Candidate Meta -->
+            <div class="bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <h3 class="font-bold text-slate-900 dark:text-white mb-6 uppercase tracking-widest text-xs">Application Meta</h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center text-sm py-3 border-b border-slate-100 dark:border-slate-800">
+                        <span class="text-slate-500">Status</span>
+                        <span class="font-bold uppercase text-[10px] px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                            {{ application.status.replace('_', ' ') }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm py-3 border-b border-slate-100 dark:border-slate-800">
+                        <span class="text-slate-500">Applied Date</span>
+                        <span class="font-bold text-slate-900 dark:text-white">{{ application.applied_at.strftime('%b %d, %Y') }}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm py-3">
+                        <span class="text-slate-500">Model Used</span>
+                        <span class="font-bold text-slate-900 dark:text-white">{{ application.ai_model_version or "Gemini 2.0 Flash" }}</span>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function rescanAI(appId) {
+    const btn = document.getElementById('rescan-btn');
+    const scoreDisplays = [
+        document.getElementById('match-score-display'),
+        document.getElementById('match-score-sidebar')
+    ];
+    const riskDisplays = [
+        document.getElementById('risk-score-sidebar')
+    ];
+    // Main analysis text container
+    const aiResponseDiv = document.getElementById('ai-analysis-text');
+    // Sidebar recommendation snippet
+    const sideRec = document.getElementById('ai-recommendation-side');
+    
+    if (!btn || btn.disabled) return;
+    
+    // UI Loading State
+    const originalContent = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined text-[16px] animate-spin">sync</span> Scanning...';
+    
+    try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const response = await fetch(`/hr/application/rescan/${appId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update AI analysis text defensively
+            const analysisText = data.risk_analysis || "No analysis details provided by AI.";
+            
+            if (aiResponseDiv) {
+                aiResponseDiv.innerText = analysisText;
+            }
+            if (sideRec) {
+                sideRec.innerText = (analysisText.substring(0, 200) || "No summary available") + "...";
+            }
+
+            // Only update scores if it was a real success
+            if (data.status === 'success') {
+                scoreDisplays.forEach(el => {
+                    if (el) el.innerText = `${data.match_score}%`;
+                });
+                riskDisplays.forEach(el => {
+                    if (el) el.innerText = `${data.risk_percentage}%`;
+                });
+                
+                // Update dynamic bars
+                document.querySelectorAll('.dynamic-width').forEach(bar => {
+                    const type = bar.classList.contains('bg-primary') ? 'match' : 'risk';
+                    bar.style.width = (type === 'match' ? data.match_score : data.risk_percentage) + '%';
+                });
+
+                btn.innerHTML = '<span class="material-symbols-outlined text-[16px] text-green-500">check_circle</span> Updated';
+            } else if (data.status === 'quota_exceeded') {
+                btn.innerHTML = '<span class="material-symbols-outlined text-[16px] text-yellow-500">warning</span> Quota Busy';
+                console.warn('AI Quota hit during rescan');
+            } else {
+                btn.innerHTML = '<span class="material-symbols-outlined text-[16px] text-orange-400">info</span> Partial Update';
+            }
+            
+            setTimeout(() => {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            }, 3000);
+        } else {
+            console.error('Server reported failure:', data.error);
+            btn.innerHTML = originalContent;
+            btn.disabled = false;
+            alert(data.error || 'AI Rescan failed.');
+        }
+    } catch (error) {
+        console.error('Rescan JS Error:', error);
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
+        // Check if it's likely a logic error or a real connection error
+        if (error instanceof TypeError && error.message.includes('undefined')) {
+             console.error('A JS Logic error occurred. Verification required.');
+        } else {
+             alert('Could not connect to server or a script error occurred. Please refresh.');
+        }
+    }
+}
+
+// Ensure dynamic widths are applied
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.dynamic-width').forEach(el => {
+        const width = el.getAttribute('data-width');
+        if (width) el.style.width = width + '%';
+    });
+});
+</script>
+{% endblock %}

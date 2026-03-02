@@ -1,0 +1,180 @@
+{% extends "candidate/base_candidate.html" %}
+{% block title %}Upload Resume - TALENT MATRIX AI{% endblock %}
+{% block page_title %}Upload Master Resume{% endblock %}
+{% block page_subtitle %}Upload or replace your master resume to power 1-Click Apply and AI Matching.{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Current Resume Status Panel -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">account_circle</span>
+            Master Profile Status
+        </h3>
+
+        {% if current_user.resume_data %}
+        <div class="flex flex-col md:flex-row gap-6">
+            <!-- Status Card -->
+            <div
+                class="flex-1 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800/30 rounded-xl p-5 flex items-start gap-4">
+                <span class="material-symbols-outlined text-green-500 text-3xl shrink-0">verified</span>
+                <div>
+                    <h4 class="text-sm font-bold text-green-800 dark:text-green-400 mb-1">Resume Active</h4>
+                    <p class="text-sm text-green-700 dark:text-green-500 mb-3">Your master resume was last updated on
+                        <strong>{{ (current_user.resume_updated_at or current_user.created_at).strftime('%B %d,
+                            %Y') }}</strong>.
+                    </p>
+                    <div class="flex items-center gap-2 text-xs font-semibold text-green-800 dark:text-green-400">
+                        <span class="material-symbols-outlined text-[14px]">description</span>
+                        {{ current_user.resume_filename }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Extracted Overview -->
+            <div
+                class="flex-[2] bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
+                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">AI Extracted Overview</h4>
+                <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4 line-clamp-3"
+                    title="{{ current_user.resume_summary | default('No summary available.', true) }}">{{
+                    current_user.resume_summary | default('No summary available.', true) }}</p>
+
+                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Detected Capabilities</h4>
+                <div class="flex flex-wrap gap-1.5">
+                    {% if current_user.skills %}
+                    {% for skill in current_user.skills.split(',') %}
+                    {% if skill.strip() %}
+                    <span
+                        class="px-2 py-1 bg-primary/10 text-emerald-700 dark:text-primary rounded-md text-xs font-semibold">
+                        {{ skill.strip() }}
+                    </span>
+                    {% endif %}
+                    {% endfor %}
+                    {% else %}
+                    <span class="text-sm text-slate-500 italic">No skills actively parsed.</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div
+            class="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 rounded-xl p-6 flex items-start gap-4">
+            <span class="material-symbols-outlined text-amber-500 text-3xl shrink-0">warning</span>
+            <div>
+                <h4 class="text-sm font-bold text-amber-800 dark:text-amber-400 mb-1">No Master Resume Found</h4>
+                <p class="text-sm text-amber-700 dark:text-amber-500">You must upload a master resume in PDF format
+                    below before you can apply to any jobs on the platform. This resume will be used as the source of
+                    truth for all 1-Click Applications and AI calculations.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Upload Form -->
+    <div
+        class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Upload New Document</h3>
+            <p class="text-sm text-slate-500 mt-0.5">Note: Uploading a new resume will completely overwrite your
+                existing master profile and trigger a new AI extraction.</p>
+        </div>
+
+        <form action="{{ url_for('candidate_upload_resume') }}" method="POST" enctype="multipart/form-data"
+            class="p-6 md:p-10 flex flex-col items-center justify-center">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="w-full max-w-xl">
+                <div class="flex items-center justify-center w-full">
+                    <label for="dropzone-file"
+                        class="flex flex-col items-center justify-center w-full h-64 border-2 border-slate-300 dark:border-slate-600 border-dashed rounded-2xl cursor-pointer bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-primary dark:hover:border-primary transition-all group">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                            <span
+                                class="material-symbols-outlined text-5xl text-slate-400 group-hover:text-primary transition-colors mb-4">cloud_upload</span>
+                            <p class="mb-2 text-sm text-slate-600 dark:text-slate-400"><span
+                                    class="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">Click
+                                    to browse</span> or drag and drop</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-500">PDF documents only (MAX. 16MB)</p>
+                        </div>
+                        <input id="dropzone-file" name="resume" type="file" class="hidden" accept=".pdf" required
+                            onchange="updateFileName(this)" />
+                    </label>
+                </div>
+
+                <!-- Selected File Display -->
+                <div id="file-display"
+                    class="hidden mt-4 p-4 rounded-xl border border-primary/30 bg-primary/5 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center">
+                            <span class="material-symbols-outlined">picture_as_pdf</span>
+                        </div>
+                        <div>
+                            <p id="file-name" class="text-sm font-bold text-slate-900 dark:text-white leading-tight">
+                                filename.pdf</p>
+                            <p class="text-xs text-primary font-semibold mt-0.5">Ready to upload</p>
+                        </div>
+                    </div>
+                    <button type="button" class="text-slate-400 hover:text-red-500 transition-colors"
+                        onclick="clearFile()">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-center">
+                <button type="submit" id="upload-btn"
+                    class="px-8 py-3 bg-primary text-slate-900 font-bold rounded-xl shadow-sm hover:bg-primary/90 transition-all flex items-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed hidden">
+                    <span
+                        class="material-symbols-outlined group-hover:-translate-y-1 transition-transform">upload</span>
+                    Process & Update Profile
+                </button>
+            </div>
+
+            <div id="loading-indicator" class="hidden mt-8 flex flex-col items-center">
+                <span class="material-symbols-outlined animate-spin text-4xl text-primary mb-3">progress_activity</span>
+                <p class="text-sm font-bold text-slate-900 dark:text-white">TALENT MATRIX AI is processing your
+                    document...</p>
+                <p class="text-xs text-slate-500 mt-1">Extracting skills and building your profile.</p>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function updateFileName(input) {
+        const fileDisplay = document.getElementById('file-display');
+        const fileName = document.getElementById('file-name');
+        const uploadBtn = document.getElementById('upload-btn');
+        const dropzone = input.parentElement;
+
+        if (input.files && input.files[0]) {
+            fileName.textContent = input.files[0].name;
+            fileDisplay.classList.remove('hidden');
+            uploadBtn.classList.remove('hidden');
+            dropzone.classList.add('hidden');
+        }
+    }
+
+    function clearFile() {
+        const input = document.getElementById('dropzone-file');
+        const fileDisplay = document.getElementById('file-display');
+        const uploadBtn = document.getElementById('upload-btn');
+        const dropzone = input.parentElement;
+
+        input.value = '';
+        fileDisplay.classList.add('hidden');
+        uploadBtn.classList.add('hidden');
+        dropzone.classList.remove('hidden');
+    }
+
+    // Intercept form submit to show loading state since AI parsing takes time
+    document.querySelector('form').addEventListener('submit', function (e) {
+        if (document.getElementById('dropzone-file').files.length > 0) {
+            document.getElementById('upload-btn').classList.add('hidden');
+            document.getElementById('file-display').classList.add('opacity-50', 'pointer-events-none');
+            document.getElementById('loading-indicator').classList.remove('hidden');
+            document.getElementById('loading-indicator').classList.add('flex');
+        }
+    });
+</script>
+{% endblock %}

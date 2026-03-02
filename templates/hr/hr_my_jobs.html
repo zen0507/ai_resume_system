@@ -1,0 +1,202 @@
+{% extends 'hr/base_hr.html' %}
+{% block title %}My Jobs{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-8">
+    <div>
+        <h2 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">My Job Postings</h2>
+        <p class="text-slate-500 mt-2 text-sm max-w-2xl">Manage all your active and closed job listings. Monitor
+            application counts and update job details as needed.</p>
+    </div>
+    <a href="{{ url_for('hr_post_job') }}" class="btn btn-primary gap-2 rounded-xl normal-case">
+        <span class="material-symbols-outlined">add</span>
+        Post New Job
+    </a>
+</div>
+
+<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden"
+    data-aos="fade-up">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Job Title</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Category</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Location</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Type</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">
+                        Applications</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                {% if jobs.items %}
+                {% for job in jobs.items %}
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+                    <td class="px-6 py-4">
+                        <div
+                            class="font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors">
+                            {{ job.title }}</div>
+                        <div class="text-xs text-slate-400 mt-0.5">Posted on {{ job.created_at.strftime('%b %d, %Y') }}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-sm text-slate-600 dark:text-slate-400 font-medium">{{ job.category or
+                            'Uncategorized' }}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400">
+                            <span class="material-symbols-outlined text-sm">location_on</span>
+                            {{ job.location }}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span
+                            class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                            {{ job.job_type }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="text-sm font-bold text-slate-900 dark:text-white">{{ job.applications|length
+                            }}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        {% if job.status == 'Active' %}
+                        <span class="flex items-center gap-1.5 text-xs font-bold text-green-600 dark:text-green-400">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                            Active
+                        </span>
+                        {% else %}
+                        <span class="flex items-center gap-1.5 text-xs font-bold text-slate-400">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                            Closed
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                            <a href="{{ url_for('hr_edit_job', id=job.id) }}"
+                                class="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                                title="Edit Job">
+                                <span class="material-symbols-outlined text-xl">edit</span>
+                            </a>
+                            <button onclick="confirmDelete('{{ job.id }}', '{{ job.title }}')"
+                                class="p-2 text-slate-400 hover:text-error hover:bg-error/10 rounded-lg transition-all"
+                                title="Delete Job">
+                                <span class="material-symbols-outlined text-xl">delete</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="7" class="px-6 py-20 text-center">
+                        <div class="flex flex-col items-center">
+                            <div
+                                class="w-20 h-20 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                                <span class="material-symbols-outlined text-4xl text-slate-300">work_off</span>
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-900 dark:text-white">No jobs found</h3>
+                            <p class="text-slate-500 mt-1 max-w-sm">You haven't posted any jobs yet. Get started by
+                                creating your first listing.</p>
+                            <a href="{{ url_for('hr_post_job') }}"
+                                class="btn btn-primary mt-6 rounded-xl normal-case">Post Your First Job</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if jobs.pages > 1 %}
+    <div
+        class="px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/30 dark:bg-slate-800/30">
+        <p class="text-sm text-slate-500">
+            Showing <span class="font-medium text-slate-900 dark:text-white">{{ (jobs.page - 1) * jobs.per_page + 1
+                }}</span> to <span class="font-medium text-slate-900 dark:text-white">{{ [(jobs.page * jobs.per_page),
+                jobs.total]|min }}</span> of <span class="font-medium text-slate-900 dark:text-white">{{ jobs.total
+                }}</span> results
+        </p>
+        <div class="flex gap-2">
+            {% if jobs.has_prev %}
+            <a href="{{ url_for('hr_my_jobs', page=jobs.prev_num) }}"
+                class="px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">Previous</a>
+            {% else %}
+            <button disabled
+                class="px-4 py-2 text-sm font-semibold text-slate-300 dark:text-slate-600 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl opacity-50 cursor-not-allowed">Previous</button>
+            {% endif %}
+
+            {% if jobs.has_next %}
+            <a href="{{ url_for('hr_my_jobs', page=jobs.next_num) }}"
+                class="px-4 py-2 text-sm font-semibold text-white bg-primary rounded-xl hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all">Next</a>
+            {% else %}
+            <button disabled
+                class="px-4 py-2 text-sm font-semibold text-slate-300 dark:text-slate-600 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl opacity-50 cursor-not-allowed">Next</button>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Delete Confirmation Modal (Native HTML Dialog or specialized implementation) -->
+<div id="delete-modal" class="fixed inset-0 z-[60] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog"
+    aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity" onclick="closeDeleteModal()">
+        </div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div
+            class="inline-block align-bottom bg-white dark:bg-slate-900 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-200 dark:border-slate-800">
+            <div class="px-6 pt-6 pb-4">
+                <div class="flex items-center gap-4">
+                    <div
+                        class="flex-shrink-0 w-12 h-12 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400">
+                        <span class="material-symbols-outlined text-2xl">warning</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white" id="modal-title">Delete Job
+                            Posting?</h3>
+                        <p class="text-sm text-slate-500 mt-1">Are you sure you want to delete <span
+                                id="delete-job-name" class="font-bold text-slate-900 dark:text-white"></span>? This
+                            action cannot be undone and all associated applications will be permanently removed.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 flex flex-col sm:flex-row-reverse gap-3">
+                <form id="delete-form" method="POST" class="w-full sm:w-auto">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit"
+                        class="w-full sm:px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-red-200 dark:shadow-none">Delete
+                        Permanently</button>
+                </form>
+                <button type="button" onclick="closeDeleteModal()"
+                    class="w-full sm:px-6 py-2.5 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmDelete(id, title) {
+        const modal = document.getElementById('delete-modal');
+        const jobName = document.getElementById('delete-job-name');
+        const form = document.getElementById('delete-form');
+
+        jobName.textContent = title;
+        form.action = `/hr/jobs/delete/${id}`;
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeDeleteModal() {
+        const modal = document.getElementById('delete-modal');
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+</script>
+{% endblock %}

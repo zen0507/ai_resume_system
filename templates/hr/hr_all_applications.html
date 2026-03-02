@@ -1,0 +1,199 @@
+{% extends "hr/base_hr.html" %}
+{% block title %}All Applications{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Candidate Pipeline</h2>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">Review and manage all applications across your posted jobs.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="flex h-3 w-3">
+                <span class="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-primary opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+            </span>
+            <span class="text-sm font-bold text-slate-700 dark:text-slate-300">{{ applications|length }} Total Applications</span>
+        </div>
+    </div>
+
+    <!-- Filters & Search -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
+        <form method="GET" action="{{ url_for('hr_all_applications') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                <input type="text" name="search" value="{{ search_query }}" placeholder="Search candidate name..."
+                    class="w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20 transition-all">
+            </div>
+            
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">work</span>
+                <select name="job_id" onchange="this.form.submit()"
+                    class="w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20 transition-all appearance-none">
+                    <option value="">All Jobs</option>
+                    {% for job in jobs %}
+                    <option value="{{ job.id }}" {% if selected_job == (job.id|string) %}selected{% endif %}>{{ job.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button type="submit" class="flex-1 bg-primary text-white font-bold py-2.5 rounded-xl hover:bg-primary/90 transition-all text-sm shadow-lg shadow-primary/20">Apply Filters</button>
+                <a href="{{ url_for('hr_all_applications') }}" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
+                    <span class="material-symbols-outlined text-[20px] align-middle">restart_alt</span>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Applications Table -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+                        <th class="py-4 px-6 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest w-1/3">Candidate & Job</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">AI Match Score</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">AI Risk</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Status</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800/80">
+                    {% for app in applications %}
+                    {% if app.candidate_id and app.job_id %}
+                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
+                        <td class="py-4 px-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center border border-slate-200 dark:border-slate-700 shrink-0">
+                                    <span class="text-sm font-bold text-slate-600 dark:text-slate-400 uppercase">{{ app.candidate_id.name[:2] }}</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{{ app.candidate_id.name }}</h4>
+                                    <p class="text-xs font-medium text-slate-500 mt-0.5">{{ app.job_id.title }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6 text-center">
+                            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full border-2 {% if app.match_score >= 80 %}border-green-500 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/10{% elif app.match_score >= 50 %}border-yellow-500 text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/10{% else %}border-slate-200 dark:border-slate-700 text-slate-400 background-slate-50{% endif %}">
+                                <span class="text-sm font-black" id="score-{{ app.id }}">{{ app.match_score }}%</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6 text-center">
+                            <div class="inline-flex items-center justify-center px-3 py-1 rounded-lg text-xs font-black {% if app.risk_percentage <= 20 %}bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400{% elif app.risk_percentage <= 50 %}bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400{% else %}bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400{% endif %}">
+                                <span id="risk-{{ app.id }}">{{ app.risk_percentage }}%</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6 text-center">
+                            {% set status = app.status | default('under_review') %}
+                            {% if status == 'hired' %}
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Hired
+                            </span>
+                            {% elif status == 'rejected' %}
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Rejected
+                            </span>
+                            {% elif status == 'shortlisted' %}
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                                <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span> Shortlisted
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span> Under Review
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 text-right space-x-2">
+                            <button onclick="rescanAI('{{ app.id }}')" id="rescan-btn-{{ app.id }}"
+                                class="inline-flex items-center justify-center p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all" title="AI Rescan">
+                                <span class="material-symbols-outlined text-[20px]">psychology</span>
+                            </button>
+                            <a href="{{ url_for('hr_view_application', id=app.id) }}"
+                                class="inline-flex items-center justify-center p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all" title="View Profile">
+                                <span class="material-symbols-outlined text-[20px]">visibility</span>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="py-20 text-center">
+                            <div class="flex flex-col items-center">
+                                <span class="material-symbols-outlined text-6xl text-slate-200 dark:text-slate-800 mb-4">group_off</span>
+                                <h3 class="text-lg font-bold text-slate-900 dark:text-white">No applications found</h3>
+                                <p class="text-slate-500 dark:text-slate-400 max-w-xs mx-auto mt-2">Try adjusting your filters or search criteria to find candidates.</p>
+                                <a href="{{ url_for('hr_all_applications') }}" class="mt-4 text-primary font-bold text-sm hover:underline">Clear all filters</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Rescan Logic -->
+<script>
+async function rescanAI(appId) {
+    const btn = document.getElementById(`rescan-btn-${appId}`);
+    const scoreText = document.getElementById(`score-${appId}`);
+    const riskText = document.getElementById(`risk-${appId}`);
+    
+    if (!btn || btn.disabled) return;
+    
+    // UI Loading State
+    const originalIcon = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined text-[20px] animate-spin">sync</span>';
+    scoreText.classList.add('animate-pulse');
+    
+    try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const response = await fetch(`/hr/application/rescan/${appId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Only update scores if it was a real success
+            if (data.status === 'success') {
+                scoreText.innerText = `${data.match_score}%`;
+                riskText.innerText = `${data.risk_percentage}%`;
+                
+                // Show Success Feedback
+                btn.innerHTML = '<span class="material-symbols-outlined text-[20px] text-green-500">check_circle</span>';
+            } else if (data.status === 'quota_exceeded') {
+                btn.innerHTML = '<span class="material-symbols-outlined text-[20px] text-yellow-500">warning</span>';
+            } else {
+                btn.innerHTML = '<span class="material-symbols-outlined text-[20px] text-orange-400">info</span>';
+            }
+            
+            setTimeout(() => {
+                btn.innerHTML = originalIcon;
+                btn.disabled = false;
+            }, 3000);
+        } else {
+            console.error('Rescan failure:', data.error);
+            alert(data.error || 'AI Rescan failed.');
+            btn.innerHTML = originalIcon;
+            btn.disabled = false;
+        }
+    } catch (error) {
+        console.error('Rescan JS Error:', error);
+        alert('Could not connect to server or a script error occurred.');
+        btn.innerHTML = originalIcon;
+        btn.disabled = false;
+    } finally {
+        scoreText.classList.remove('animate-pulse');
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,32 @@
+# Python / Flask / VSCode / OS files
+__pycache__/
+*.py[cod]
+*.sqlite3
+instance/
+.env
+.venv/
+env/
+venv/
+ENV/
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.swp
+.DS_Store
+.idea/
+.vscode/
+*.egg-info/
+*.egg
+build/
+dist/
+*.spec
+*.bak
+*.tmp
+# Flask secret key files
+secret_key.txt
+
+# Project specific
+uploads/
+.env

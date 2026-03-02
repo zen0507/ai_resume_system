@@ -1,0 +1,161 @@
+{% extends 'hr/base_hr.html' %}
+{% block title %}Edit Job{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-8">
+    <div>
+        <h2 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Edit Job Listing</h2>
+        <p class="text-slate-500 mt-2 text-sm max-w-2xl">Update the details for <span class="font-bold text-primary">{{
+                job.title }}</span>. Changes will be reflected immediately for all applicants.</p>
+    </div>
+</div>
+
+<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden"
+    data-aos="fade-up">
+    <div class="p-8 md:p-10">
+        <form action="{{ url_for('hr_edit_job', id=job.id) }}" method="POST" class="space-y-8">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- Basic Details -->
+            <div>
+                <h3
+                    class="text-lg font-bold text-slate-900 dark:text-white mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">
+                    1. Basic Details</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="md:col-span-2">
+                        <label for="title"
+                            class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Job Title
+                            *</label>
+                        <input type="text" id="title" name="title" required value="{{ job.title }}"
+                            class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-slate-400"
+                            placeholder="e.g., Senior Software Engineer">
+                    </div>
+
+                    <div>
+                        <label for="job_type"
+                            class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Job Type
+                            *</label>
+                        <select id="job_type" name="job_type" required
+                            class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 transition-all">
+                            <option value="Full-time" {% if job.job_type=='Full-time' %}selected{% endif %}>Full-time
+                            </option>
+                            <option value="Part-time" {% if job.job_type=='Part-time' %}selected{% endif %}>Part-time
+                            </option>
+                            <option value="Remote" {% if job.job_type=='Remote' %}selected{% endif %}>Remote</option>
+                            <option value="Contract" {% if job.job_type=='Contract' %}selected{% endif %}>Contract
+                            </option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="category"
+                            class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Category /
+                            Department</label>
+                        <input type="text" id="category" name="category" required value="{{ job.category }}"
+                            class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-slate-400"
+                            placeholder="e.g., Engineering, Marketing">
+                    </div>
+
+                    <div>
+                        <label for="status"
+                            class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Listing
+                            Status</label>
+                        <select id="status" name="status" required
+                            class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 transition-all">
+                            <option value="Active" {% if job.status=='Active' %}selected{% endif %}>Active</option>
+                            <option value="Closed" {% if job.status=='Closed' %}selected{% endif %}>Closed</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Job Requirements & Description -->
+            <div>
+                <h3
+                    class="text-lg font-bold text-slate-900 dark:text-white mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">
+                    2. Requirements & Description</h3>
+                <div class="grid grid-cols-1 gap-6">
+                    <div>
+                        <label for="description"
+                            class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Job Description
+                            *</label>
+                        <textarea id="description" name="description" rows="6" required
+                            class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-slate-400 resize-none"
+                            placeholder="Provide a detailed description of the role...">{{ job.description }}</textarea>
+                    </div>
+
+                    <div>
+                        <label for="skills_required"
+                            class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Required Skills
+                            * <span class="text-slate-400 font-normal">(Comma-separated)</span></label>
+                        <textarea id="skills_required" name="skills_required" rows="3" required
+                            class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-slate-400 resize-none"
+                            placeholder="e.g., Python, React, PostgreSQL">{{ job.required_skills }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Location & Compensation -->
+            <div>
+                <h3
+                    class="text-lg font-bold text-slate-900 dark:text-white mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">
+                    3. Location & Compensation</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="md:col-span-2">
+                        <label for="location"
+                            class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Location
+                            *</label>
+                        <input type="text" id="location" name="location" required value="{{ job.location }}"
+                            class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-slate-400"
+                            placeholder="e.g., San Francisco, CA or Remote">
+                    </div>
+
+                    <div>
+                        <label for="experience_required"
+                            class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Minimum
+                            Experience (Years) *</label>
+                        <input type="number" id="experience_required" name="experience_required" min="0" required
+                            value="{{ job.experience_required }}"
+                            class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 transition-all"
+                            placeholder="0">
+                    </div>
+
+                    <div></div> <!-- Spacer -->
+
+                    <div>
+                        <label for="salary_min"
+                            class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Minimum Salary
+                            (USD)</label>
+                        <input type="number" id="salary_min" name="salary_min" min="0"
+                            value="{{ job.salary_min or '' }}"
+                            class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 transition-all"
+                            placeholder="e.g., 80000">
+                    </div>
+
+                    <div>
+                        <label for="salary_max"
+                            class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Maximum Salary
+                            (USD)</label>
+                        <input type="number" id="salary_max" name="salary_max" min="0"
+                            value="{{ job.salary_max or '' }}"
+                            class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 transition-all"
+                            placeholder="e.g., 120000">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-4">
+                <a href="{{ url_for('hr_my_jobs') }}" type="button"
+                    class="px-6 py-3 font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all">
+                    Cancel
+                </a>
+                <button type="submit"
+                    class="px-8 py-3 bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl shadow-lg shadow-primary/20 transition-all transform hover:-translate-y-0.5">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

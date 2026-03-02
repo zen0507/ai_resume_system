@@ -1,0 +1,111 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Manage Candidates - TALENT MATRIX AI{% endblock %}
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Manage Candidates</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400">View and manage all registered candidates in the
+                system.</p>
+        </div>
+        <a href="{{ url_for('admin_add_candidate') }}"
+            class="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-semibold shadow-sm transition-colors text-sm flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm">person_add</span>
+            Add Candidate
+        </a>
+    </div>
+
+    <div class="flex items-center justify-between mb-4">
+        <form method="GET" action="{{ url_for('admin_manage_candidates') }}" class="relative w-full max-w-sm">
+            <span
+                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+            <input type="text" name="search" value="{{ search }}" placeholder="Search by name or email..."
+                class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary/20 transition-all dark:text-white" />
+        </form>
+    </div>
+
+    <div
+        class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead
+                    class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
+                    <tr>
+                        <th class="px-6 py-4">Candidate ID</th>
+                        <th class="px-6 py-4">Name</th>
+                        <th class="px-6 py-4">Email</th>
+                        <th class="px-6 py-4 text-center">Applications</th>
+                        <th class="px-6 py-4">Joined Date</th>
+                        <th class="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    {% for candidate in candidates %}
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                        <td class="px-6 py-4 text-slate-500 font-medium">#{{ candidate.id }}</td>
+                        <td class="px-6 py-4 font-bold text-slate-900 dark:text-white">{{ candidate.name }}</td>
+                        <td class="px-6 py-4 text-slate-500">{{ candidate.email }}</td>
+                        <td class="px-6 py-4 text-center">
+                            <span
+                                class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-xs">{{
+                                candidate.applications|length }}</span>
+                        </td>
+                        <td class="px-6 py-4 text-slate-500 text-xs font-medium">{{ candidate.created_at.strftime('%b
+                            %d, %Y') }}</td>
+                        <td class="px-6 py-4 text-right flex items-center justify-end gap-2">
+                            <a href="{{ url_for('admin_view_candidate', id=candidate.id) }}"
+                                class="w-8 h-8 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary transition-colors inline-flex items-center justify-center border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+                                title="View Details">
+                                <span class="material-symbols-outlined text-sm">visibility</span>
+                            </a>
+                            <form method="POST" action="{{ url_for('admin_delete_candidate', id=candidate.id) }}"
+                                class="inline"
+                                onsubmit="return confirm('Are you sure you want to delete {{ candidate.name }}? This action cannot be undone.');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit"
+                                    class="w-8 h-8 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition-colors inline-flex items-center justify-center border border-transparent hover:border-red-200 dark:hover:border-red-900/50"
+                                    title="Delete Candidate">
+                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-slate-500">
+                            <div class="flex flex-col items-center gap-2">
+                                <span class="material-symbols-outlined text-4xl text-slate-300">group_off</span>
+                                <p>No candidates registered yet.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if pagination.pages > 1 %}
+    <div class="flex items-center justify-between mt-6">
+        <p class="text-sm text-slate-500">Showing page {{ pagination.page }} of {{ pagination.pages }}</p>
+        <div class="flex items-center gap-2">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('admin_manage_candidates', page=pagination.prev_num, search=search) }}"
+                class="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm">Previous</a>
+            {% else %}
+            <span
+                class="px-3 py-1.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg text-sm font-medium text-slate-400 dark:text-slate-500 cursor-not-allowed shadow-none">Previous</span>
+            {% endif %}
+
+            {% if pagination.has_next %}
+            <a href="{{ url_for('admin_manage_candidates', page=pagination.next_num, search=search) }}"
+                class="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm">Next</a>
+            {% else %}
+            <span
+                class="px-3 py-1.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg text-sm font-medium text-slate-400 dark:text-slate-500 cursor-not-allowed shadow-none">Next</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

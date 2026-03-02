@@ -1,0 +1,120 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Settings - TALENT MATRIX AI{% endblock %}
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Platform Settings</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Configure global application parameters.</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Profile Settings -->
+        <div class="lg:col-span-2 space-y-6">
+            <div
+                class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Admin Profile</h3>
+                <form method="POST" action="{{ url_for('admin_update_profile') }}" class="space-y-4">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Full
+                                Name</label>
+                            <input type="text" name="name" value="{{ current_user.name }}" required
+                                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Email
+                                Address</label>
+                            <input type="email" value="{{ current_user.email }}"
+                                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 cursor-not-allowed outline-none"
+                                disabled>
+                        </div>
+                        <div class="space-y-2 md:col-span-2">
+                            <label class="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">New Password
+                                (Optional)</label>
+                            <div class="relative">
+                                <input type="password" id="password" name="password" minlength="8"
+                                    placeholder="Leave blank to keep current password"
+                                    class="w-full pl-4 pr-12 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+                                <button type="button"
+                                    onclick="const p=document.getElementById('password'); const e=document.getElementById('pwd-eye-settings'); if(p.type==='password'){p.type='text';e.textContent='visibility';}else{p.type='password';e.textContent='visibility_off';}"
+                                    class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none">
+                                    <span class="material-symbols-outlined text-[20px]"
+                                        id="pwd-eye-settings">visibility_off</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-4">
+                        <button type="submit"
+                            class="px-6 py-2.5 bg-primary text-white font-bold rounded-xl shadow-md hover:bg-primary/90 hover:-translate-y-0.5 transition-all shadow-primary/20 active:scale-95">Save
+                            Changes</button>
+                    </div>
+                </form>
+            </div>
+
+            <div
+                class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">System Configurations</h3>
+                <form method="POST" action="{{ url_for('admin_settings') }}" class="space-y-4">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div
+                        class="flex items-center justify-between p-4 border border-slate-100 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                        <div>
+                            <p class="font-bold text-slate-900 dark:text-white">Maintenance Mode</p>
+                            <p class="text-xs text-slate-500 mt-0.5">Temporarily block non-admin logins.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input name="maintenance_mode" type="checkbox" class="sr-only peer" {% if
+                                settings.maintenance_mode %}checked{% endif %}>
+                            <div
+                                class="w-11 h-6 bg-slate-200 peer-focus:outline-none returned-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary">
+                            </div>
+                        </label>
+                    </div>
+                    <div
+                        class="flex items-center justify-between p-4 border border-slate-100 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                        <div>
+                            <p class="font-bold text-slate-900 dark:text-white">Strict AI Filtering</p>
+                            <p class="text-xs text-slate-500 mt-0.5">Auto-reject applications below 50% match score.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input name="strict_ai_filtering" type="checkbox" class="sr-only peer" {% if
+                                settings.strict_ai_filtering %}checked{% endif %}>
+                            <div
+                                class="w-11 h-6 bg-slate-200 peer-focus:outline-none returned-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary">
+                            </div>
+                        </label>
+                    </div>
+                    <div class="pt-4 flex justify-end">
+                        <button type="submit"
+                            class="px-6 py-2.5 bg-primary text-white font-bold rounded-xl shadow-md hover:bg-primary/90 hover:-translate-y-0.5 transition-all shadow-primary/20 active:scale-95">Save
+                            Configurations</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Info Card -->
+        <div
+            class="bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/5 p-6 rounded-2xl border border-primary/20 h-fit relative overflow-hidden group">
+            <div
+                class="absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-colors duration-500">
+            </div>
+            <div
+                class="w-12 h-12 bg-primary text-white rounded-xl flex items-center justify-center mb-4 shadow-lg shadow-primary/30 relative z-10">
+                <span class="material-symbols-outlined">info</span>
+            </div>
+            <h3 class="font-black text-xl text-slate-900 dark:text-white mb-2 relative z-10 tracking-tight">TALENT
+                MATRIX AI</h3>
+            <p class="text-sm font-medium text-slate-600 dark:text-slate-400 mb-4 relative z-10">Version
+                2.0.1<br>Powered by Google Gemini 1.5</p>
+            <div class="w-full h-px bg-primary/20 my-5 relative z-10"></div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 relative z-10 leading-relaxed">If you experience
+                issues, please contact support or check the system status page.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
